@@ -1,0 +1,28 @@
+services:
+
+  # ---- APIサーバー（FastAPI）----
+  api:
+    build: ./server
+    container_name: kakeibo-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ---- フロントエンド（nginx）----
+  client:
+    build: ./client
+    container_name: kakeibo-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
